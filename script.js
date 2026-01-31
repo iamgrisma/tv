@@ -4,6 +4,8 @@ const state = {
     filteredChannels: [],
     categories: new Set(),
     countries: new Set(),
+    countryCodeMap: new Map(),
+    detectedCountry: null,
     currentIdx: -1,
     pageSize: 100,
     searchQuery: '',
@@ -49,6 +51,9 @@ async function init() {
 
         parseM3U(text);
         updateFilters();
+
+        // Apply detected country if available
+        applyCountryDetection();
 
         // Restore last played channel if available
         const lastId = localStorage.getItem(KEY_LAST_CHANNEL);
@@ -111,22 +116,37 @@ function updateFavoriteButtonState() {
 }
 
 // Geolocation
+function applyCountryDetection() {
+    if (!state.detectedCountry) return;
+    if (state.countries.size === 0) return;
+
+    const data = state.detectedCountry;
+    const countryName = data.country_name;
+
+    if (countryName) {
+        console.log('Detected Country:', countryName);
+        if (state.countries.has(countryName)) {
+            countrySelect.value = countryName;
+            state.selectedCountry = countryName;
+            filterChannels();
+        } else if (data.country_code && state.countryCodeMap.has(data.country_code)) {
+            // Try code if name mismatch (e.g. US vs United States)
+            const mappedName = state.countryCodeMap.get(data.country_code);
+            countrySelect.value = mappedName;
+            state.selectedCountry = mappedName;
+            filterChannels();
+        }
+    }
+}
+
 async function detectCountry() {
     try {
         const res = await fetch('https://ipapi.co/json/');
         if (res.ok) {
             const data = await res.json();
-            const countryName = data.country_name;
-            if (countryName) {
-                console.log('Detected Country:', countryName);
-                if (state.countries.has(countryName)) {
-                    countrySelect.value = countryName;
-                    state.selectedCountry = countryName;
-                    filterChannels();
-                } else {
-                    // Try code if name mismatch (e.g. US vs United States)
-                    // Simplified: just match known names for now
-                }
+            if (data.country_name) {
+                state.detectedCountry = data;
+                applyCountryDetection();
             }
         }
     } catch (e) {
@@ -140,6 +160,7 @@ function parseM3U(content) {
     state.channels = [];
     state.categories = new Set();
     state.countries = new Set();
+    state.countryCodeMap = new Map();
 
     let channelIndex = 1;
     let currentChannel = {};
@@ -172,6 +193,7 @@ function parseM3U(content) {
                     } catch (e) {
                         countryName = countryCode;
                     }
+                    state.countryCodeMap.set(countryCode, countryName);
                 }
             }
 
