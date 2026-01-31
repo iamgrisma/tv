@@ -135,6 +135,16 @@ async function detectCountry() {
 }
 
 // Parser
+function getAttribute(line, key) {
+    const search = key + '="';
+    const start = line.indexOf(search);
+    if (start === -1) return null;
+    const valueStart = start + search.length;
+    const valueEnd = line.indexOf('"', valueStart);
+    if (valueEnd === -1) return null;
+    return line.substring(valueStart, valueEnd);
+}
+
 function parseM3U(content) {
     const lines = content.split('\n');
     state.channels = [];
@@ -149,21 +159,21 @@ function parseM3U(content) {
         if (!line) continue;
 
         if (line.startsWith('#EXTINF:')) {
-            const idMatch = line.match(/tvg-id="([^"]*)"/);
-            const logoMatch = line.match(/tvg-logo="([^"]*)"/);
-            const groupMatch = line.match(/group-title="([^"]*)"/);
+            const tvgIdVal = getAttribute(line, 'tvg-id');
+            const logoVal = getAttribute(line, 'tvg-logo');
+            const groupVal = getAttribute(line, 'group-title');
 
             const commaIdx = line.lastIndexOf(',');
             const name = line.substring(commaIdx + 1).trim();
-            const group = groupMatch ? groupMatch[1] : 'Uncategorized';
-            const tvgId = idMatch ? idMatch[1] : `gen_${channelIndex}`; // Fallback ID
+            const group = groupVal !== null ? groupVal : 'Uncategorized';
+            const tvgId = tvgIdVal !== null ? tvgIdVal : `gen_${channelIndex}`; // Fallback ID
 
             // Extract country
             let countryCode = 'Unknown';
             let countryName = 'International';
 
-            if (idMatch && idMatch[1]) {
-                const parts = idMatch[1].split('@')[0].split('.');
+            if (tvgIdVal) {
+                const parts = tvgIdVal.split('@')[0].split('.');
                 const lastPart = parts[parts.length - 1];
                 if (lastPart && lastPart.length === 2) {
                     countryCode = lastPart.toUpperCase();
@@ -179,7 +189,7 @@ function parseM3U(content) {
 
             currentChannel = {
                 id: tvgId,
-                logo: logoMatch ? logoMatch[1] : '',
+                logo: logoVal || '',
                 group: group,
                 name: name || 'Unknown Channel',
                 sn: sn,
