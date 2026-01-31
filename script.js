@@ -135,8 +135,22 @@ async function detectCountry() {
 }
 
 // Parser
+function* iterateLines(content) {
+    let start = 0;
+    let end = content.indexOf('\n', start);
+
+    while (end !== -1) {
+        yield content.substring(start, end);
+        start = end + 1;
+        end = content.indexOf('\n', start);
+    }
+
+    if (start < content.length) {
+        yield content.substring(start);
+    }
+}
+
 function parseM3U(content) {
-    const lines = content.split('\n');
     state.channels = [];
     state.categories = new Set();
     state.countries = new Set();
@@ -144,8 +158,8 @@ function parseM3U(content) {
     let channelIndex = 1;
     let currentChannel = {};
 
-    for (let i = 0; i < lines.length; i++) {
-        const line = lines[i].trim();
+    for (const rawLine of iterateLines(content)) {
+        const line = rawLine.trim();
         if (!line) continue;
 
         if (line.startsWith('#EXTINF:')) {
