@@ -275,6 +275,15 @@ function renderList() {
 }
 
 // Actions
+function debounce(func, wait) {
+    let timeout;
+    return function(...args) {
+        const context = this;
+        clearTimeout(timeout);
+        timeout = setTimeout(() => func.apply(context, args), wait);
+    };
+}
+
 function filterChannels() {
     const q = searchInput.value.toLowerCase();
     const cat = categorySelect.value;
@@ -356,7 +365,7 @@ btnFavorites.onclick = () => {
     filterChannels();
 };
 
-searchInput.addEventListener('input', filterChannels);
+searchInput.addEventListener('input', debounce(filterChannels, 300));
 categorySelect.addEventListener('change', () => {
     state.selectedCategory = categorySelect.value;
     filterChannels();
