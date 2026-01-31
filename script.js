@@ -356,7 +356,8 @@ btnFavorites.onclick = () => {
     filterChannels();
 };
 
-searchInput.addEventListener('input', filterChannels);
+// Debounce search to reduce lag on large lists
+searchInput.addEventListener('input', debounce(filterChannels, 300));
 categorySelect.addEventListener('change', () => {
     state.selectedCategory = categorySelect.value;
     filterChannels();
@@ -365,5 +366,15 @@ countrySelect.addEventListener('change', () => {
     state.selectedCountry = countrySelect.value;
     filterChannels();
 });
+
+// Utility
+function debounce(func, wait) {
+    let timeout;
+    return function(...args) {
+        const context = this;
+        clearTimeout(timeout);
+        timeout = setTimeout(() => func.apply(context, args), wait);
+    };
+}
 
 init();
