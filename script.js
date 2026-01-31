@@ -6,6 +6,7 @@ const state = {
     countries: new Set(),
     currentIdx: -1,
     pageSize: 100,
+    visibleCount: 100,
     searchQuery: '',
     selectedCategory: 'all',
     selectedCountry: 'all',
@@ -227,14 +228,21 @@ function updateFilters() {
 }
 
 // Render
-function renderList() {
-    listContainer.innerHTML = '';
+function renderList(append = false) {
+    if (!append) {
+        listContainer.innerHTML = '';
+    } else {
+        const existingBtn = listContainer.querySelector('.load-more-container');
+        if (existingBtn) existingBtn.remove();
+    }
 
     // Chunking for performance if list is huge? 
     // For now, just slice
-    const displayList = state.filteredChannels.slice(0, state.pageSize);
+    const start = append ? state.visibleCount - state.pageSize : 0;
+    const end = state.visibleCount;
+    const displayList = state.filteredChannels.slice(start, end);
 
-    if (displayList.length === 0) {
+    if (!append && displayList.length === 0) {
         listContainer.innerHTML = '<div class="placeholder-msg">No channels found</div>';
         return;
     }
@@ -242,9 +250,10 @@ function renderList() {
     const fragment = document.createDocumentFragment();
 
     displayList.forEach((ch, idx) => {
+        const absoluteIdx = start + idx;
         const isFav = state.favorites.has(ch.id);
         const el = document.createElement('div');
-        el.className = `channel-item ${state.currentIdx === idx && state.filteredChannels[state.currentIdx] === ch ? 'active' : ''}`;
+        el.className = `channel-item ${state.currentIdx === absoluteIdx && state.filteredChannels[state.currentIdx] === ch ? 'active' : ''}`;
 
         el.innerHTML = `
             <div class="ch-sn">#${ch.sn}</div>
@@ -272,6 +281,22 @@ function renderList() {
 
     listContainer.appendChild(fragment);
     countLabel.textContent = `${state.filteredChannels.length} channels`;
+
+    if (state.visibleCount < state.filteredChannels.length) {
+        const btnContainer = document.createElement('div');
+        btnContainer.className = 'load-more-container';
+
+        const btn = document.createElement('button');
+        btn.className = 'load-more-btn';
+        btn.innerHTML = 'Load More <i class="fa-solid fa-chevron-down"></i>';
+        btn.onclick = () => {
+            state.visibleCount += state.pageSize;
+            renderList(true);
+        };
+
+        btnContainer.appendChild(btn);
+        listContainer.appendChild(btnContainer);
+    }
 }
 
 // Actions
@@ -290,6 +315,7 @@ function filterChannels() {
     });
 
     // Reset page or list position
+    state.visibleCount = state.pageSize;
     renderList();
 }
 
