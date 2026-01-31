@@ -52,6 +52,9 @@
                 <button id="btn-favorites" class="fav-toggle" title="Show Favorites">
                     <i class="fa-regular fa-star"></i>
                 </button>
+                <button id="btn-settings" class="fav-toggle" title="Settings">
+                    <i class="fa-solid fa-gear"></i>
+                </button>
             </div>
             <div class="filters">
                 <select id="country-filter">
@@ -67,6 +70,27 @@
             <div id="channel-list" class="channel-list">
                 <!-- Channels injected here -->
                 <div class="placeholder-msg">Fetching playlist... (this may take a moment)</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div id="settings-modal" class="modal hidden">
+        <div class="modal-overlay"></div>
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Settings</h3>
+                <button id="close-settings" class="close-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="playlist-url">M3U Playlist URL</label>
+                    <input type="text" id="playlist-url" placeholder="Enter .m3u url here...">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="btn-reset-playlist" class="btn-secondary">Reset Default</button>
+                <button id="btn-save-playlist" class="btn-primary">Save & Reload</button>
             </div>
         </div>
     </div>

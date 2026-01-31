@@ -34,6 +34,16 @@ const regionNames = new Intl.DisplayNames(['en'], { type: 'region' });
 // STORAGE KEYS
 const KEY_FAVORITES = 'iptv_favorites';
 const KEY_LAST_CHANNEL = 'iptv_last_channel';
+const KEY_PLAYLIST = 'iptv_playlist_url';
+const DEFAULT_PLAYLIST = 'https://iptv-org.github.io/iptv/index.m3u';
+
+// Settings Elements
+const btnSettings = document.getElementById('btn-settings');
+const modalSettings = document.getElementById('settings-modal');
+const closeSettings = document.getElementById('close-settings');
+const playlistInput = document.getElementById('playlist-url');
+const btnSavePlaylist = document.getElementById('btn-save-playlist');
+const btnResetPlaylist = document.getElementById('btn-reset-playlist');
 
 // Initialize
 async function init() {
@@ -42,8 +52,10 @@ async function init() {
     // Auto-detect country (non-blocking)
     detectCountry();
 
+    const playlistUrl = localStorage.getItem(KEY_PLAYLIST) || DEFAULT_PLAYLIST;
+
     try {
-        const response = await fetch('https://iptv-org.github.io/iptv/index.m3u');
+        const response = await fetch(playlistUrl);
         if (!response.ok) throw new Error('Failed to download playlist');
         const text = await response.text();
 
@@ -227,14 +239,29 @@ function updateFilters() {
 }
 
 // Render
-function renderList() {
-    listContainer.innerHTML = '';
+function renderList(append = false) {
+    let startIdx = 0;
 
-    // Chunking for performance if list is huge? 
-    // For now, just slice
-    const displayList = state.filteredChannels.slice(0, state.pageSize);
+    if (append) {
+        // If appending, start from where we left off
+        // (accounting for potential placeholder message)
+        if (!listContainer.querySelector('.channel-item')) {
+            startIdx = 0;
+        } else {
+            startIdx = listContainer.querySelectorAll('.channel-item').length;
+        }
+    } else {
+        // Save scroll position if re-rendering in place
+        // (Only strictly needed if we want to preserve scroll on favorite toggle, etc.)
+        // But if filtering, we usually want to go to top.
+        // We'll let the caller handle scroll reset if needed, or just let it be.
+        // For simplicity: Clear everything.
+        listContainer.innerHTML = '';
+    }
 
-    if (displayList.length === 0) {
+    const displayList = state.filteredChannels.slice(startIdx, state.pageSize);
+
+    if (displayList.length === 0 && !append) {
         listContainer.innerHTML = '<div class="placeholder-msg">No channels found</div>';
         return;
     }
@@ -244,7 +271,11 @@ function renderList() {
     displayList.forEach((ch, idx) => {
         const isFav = state.favorites.has(ch.id);
         const el = document.createElement('div');
-        el.className = `channel-item ${state.currentIdx === idx && state.filteredChannels[state.currentIdx] === ch ? 'active' : ''}`;
+        el.className = 'channel-item';
+
+        if (state.filteredChannels[state.currentIdx] === ch) {
+            el.classList.add('active');
+        }
 
         el.innerHTML = `
             <div class="ch-sn">#${ch.sn}</div>
@@ -270,6 +301,12 @@ function renderList() {
         fragment.appendChild(el);
     });
 
+    // If append, remove placeholder if exists (though unlikely if we are appending)
+    if (append) {
+        const msg = listContainer.querySelector('.placeholder-msg');
+        if (msg) msg.remove();
+    }
+
     listContainer.appendChild(fragment);
     countLabel.textContent = `${state.filteredChannels.length} channels`;
 }
@@ -289,8 +326,10 @@ function filterChannels() {
         return matchesSearch && matchesCat && matchesCtry && matchesFav;
     });
 
-    // Reset page or list position
-    renderList();
+    // Reset page
+    state.pageSize = 100;
+    renderList(false);
+    listContainer.scrollTop = 0;
 }
 
 function selectChannel(channel) {
@@ -300,10 +339,18 @@ function selectChannel(channel) {
     localStorage.setItem(KEY_LAST_CHANNEL, channel.id);
 
     const idx = state.filteredChannels.indexOf(channel);
-    state.currentIdx = idx; // Note: if filtered out, this might be -1, but that's ok
+    state.currentIdx = idx;
 
+    // Update active class
     const items = document.querySelectorAll('.channel-item');
     items.forEach(el => el.classList.remove('active'));
+
+    // Try to highlight the specific element if rendered
+    const renderedItems = listContainer.querySelectorAll('.channel-item');
+    if (renderedItems[idx]) {
+        renderedItems[idx].classList.add('active');
+        renderedItems[idx].scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
 
     titleEl.textContent = channel.name;
     catEl.textContent = `${channel.country} | ${channel.group}`;
@@ -356,7 +403,16 @@ btnFavorites.onclick = () => {
     filterChannels();
 };
 
-searchInput.addEventListener('input', filterChannels);
+// Utils
+function debounce(func, wait) {
+    let timeout;
+    return function(...args) {
+        clearTimeout(timeout);
+        timeout = setTimeout(() => func.apply(this, args), wait);
+    };
+}
+
+searchInput.addEventListener('input', debounce(filterChannels, 500));
 categorySelect.addEventListener('change', () => {
     state.selectedCategory = categorySelect.value;
     filterChannels();
@@ -365,5 +421,76 @@ countrySelect.addEventListener('change', () => {
     state.selectedCountry = countrySelect.value;
     filterChannels();
 });
+
+// Settings Modal Logic
+btnSettings.onclick = () => {
+    modalSettings.classList.remove('hidden');
+    playlistInput.value = localStorage.getItem(KEY_PLAYLIST) || DEFAULT_PLAYLIST;
+};
+
+closeSettings.onclick = () => {
+    modalSettings.classList.add('hidden');
+};
+
+modalSettings.onclick = (e) => {
+    if (e.target === modalSettings || e.target.classList.contains('modal-overlay')) {
+        modalSettings.classList.add('hidden');
+    }
+};
+
+btnSavePlaylist.onclick = () => {
+    const url = playlistInput.value.trim();
+    if (url) {
+        localStorage.setItem(KEY_PLAYLIST, url);
+        location.reload();
+    }
+};
+
+btnResetPlaylist.onclick = () => {
+    localStorage.removeItem(KEY_PLAYLIST);
+    location.reload();
+};
+
+// Infinite Scroll
+listContainer.addEventListener('scroll', () => {
+    if (listContainer.scrollTop + listContainer.clientHeight >= listContainer.scrollHeight - 200) {
+        if (state.pageSize < state.filteredChannels.length) {
+            state.pageSize += 50;
+            renderList(true);
+        }
+    }
+});
+
+// Keyboard Navigation
+document.addEventListener('keydown', (e) => {
+    if (e.target.tagName === 'INPUT') return;
+
+    if (e.code === 'Space') {
+        e.preventDefault();
+        if (video.paused) video.play(); else video.pause();
+    } else if (e.code === 'ArrowUp') {
+        e.preventDefault();
+        navigateChannel(-1);
+    } else if (e.code === 'ArrowDown') {
+        e.preventDefault();
+        navigateChannel(1);
+    }
+});
+
+function navigateChannel(direction) {
+    if (state.filteredChannels.length === 0) return;
+    let newIdx = state.currentIdx + direction;
+
+    if (newIdx < 0) newIdx = 0;
+    if (newIdx >= state.filteredChannels.length) newIdx = state.filteredChannels.length - 1;
+
+    // Auto-load if navigating past rendered list
+    if (newIdx >= state.pageSize) {
+        state.pageSize = newIdx + 20;
+        renderList(true);
+    }
+
+    selectChannel(state.filteredChannels[newIdx]);
+}
 
 init();
