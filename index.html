@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IPTV Player</title>
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- HLS.js -->
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <div class="app-container">
+        <!-- Player Section -->
+        <div class="player-container">
+            <div class="video-wrapper">
+                <video id="video" controls autoplay></video>
+                <div id="loading-overlay" class="hidden">
+                    <div class="spinner"></div>
+                    <p>Loading Stream...</p>
+                </div>
+            </div>
+            <div class="controls-area">
+                <div class="current-info">
+                    <img id="current-logo" src="" alt="" onerror="this.style.display='none'">
+                    <div>
+                        <h2 id="current-title">Select a Channel</h2>
+                        <span id="current-category" class="badge">No Category</span>
+                    </div>
+                </div>
+                <div class="nav-buttons">
+                    <button id="btn-prev" title="Previous Channel"><i class="fa-solid fa-backward-step"></i>
+                        Prev</button>
+                    <button id="btn-next" title="Next Channel">Next <i class="fa-solid fa-forward-step"></i></button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar / Channel List -->
+        <div class="sidebar">
+            <div class="search-box">
+                <i class="fa-solid fa-search"></i>
+                <input type="text" id="search-input" placeholder="Search by number, name...">
+            </div>
+                <select id="country-filter">
+                    <option value="all">All Countries</option>
+                </select>
+                <select id="category-filter">
+                    <option value="all">All Categories</option>
+                </select>
+                <button id="btn-favorites" class="btn-icon" title="Show Favorites">
+                    <i class="fa-regular fa-heart"></i>
+                </button>
+            </div>
+            <div style="padding: 0 1.5rem; color: #6b7280; font-size: 0.8rem;">
+                <span id="channel-count">Loading channels...</span>
+            </div>
+            <div id="channel-list" class="channel-list">
+                <!-- Channels injected here -->
+                <div class="placeholder-msg">Fetching playlist... (this may take a moment)</div>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+
+</html>
