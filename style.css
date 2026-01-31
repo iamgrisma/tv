@@ -162,32 +162,26 @@ button:active {
 }
 
 .search-box {
-    padding: 1.5rem;
-    position: relative;
+    padding: 1rem;
     border-bottom: 1px solid var(--border);
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
 }
 
-.search-box i {
-    position: absolute;
-    left: 2.25rem;
-    top: 50%;
-    transform: translateY(-50%);
+.search-box i.fa-search {
     color: var(--text-secondary);
 }
 
-input {
-    width: 100%;
-    background: var(--bg-dark);
-    border: 1px solid var(--border);
-    padding: 0.75rem 1rem 0.75rem 2.5rem;
-    border-radius: 0.5rem;
-    color: var(--text-primary);
+.search-box input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    color: white;
     font-family: inherit;
+    font-size: 0.95rem;
     outline: none;
-}
-
-input:focus {
-    border-color: var(--accent);
 }
 
 .filters {
@@ -284,49 +278,41 @@ select {
 }
 
 
-    margin-top: 0.5rem;
+margin-top: 0.5rem;
 }
 
-/* Favorites Button */
-.btn-icon {
+/* Favorites Toggle in Search */
+.fav-toggle {
     background: transparent;
-    border: 1px solid var(--border);
+    border: none;
     color: var(--text-secondary);
-    width: 40px;
-    height: 40px;
-    border-radius: 4px;
     cursor: pointer;
-    font-size: 1.2rem;
-    transition: all 0.2s;
+    font-size: 1.1rem;
+    padding: 0 0.5rem;
+    transition: color 0.2s;
     display: flex;
     align-items: center;
-    justify-content: center;
 }
 
-.btn-icon:hover {
-    color: var(--accent);
-    border-color: var(--accent);
+.fav-toggle:hover {
+    color: #eab308;
+    /* Gold/Yellow */
 }
 
-.btn-icon.active {
-    color: var(--accent);
-    border-color: var(--accent);
-    background: rgba(229, 9, 20, 0.1);
-}
-
-/* Channel List Favorites Icon */
-.ch-action {
-    padding: 0 0.5rem;
+.fav-toggle.active {
+    color: #eab308;
+    text-shadow: 0 0 10px rgba(234, 179, 8, 0.3);
 }
 
 .fav-icon {
     color: var(--text-secondary);
     cursor: pointer;
-    transition: color 0.2s;
+    transition: all 0.2s;
 }
 
-.fav-icon:hover, .fav-icon.fa-solid {
-    color: var(--accent);
+.fav-icon:hover,
+.fav-icon.fa-solid {
+    color: #eab308;
 }
 
 .ch-info {

@@ -103,10 +103,10 @@ function updateFavoriteButtonState() {
     const icon = btnFavorites.querySelector('i');
     if (state.showFavoritesOnly) {
         btnFavorites.classList.add('active');
-        icon.className = 'fa-solid fa-heart';
+        icon.className = 'fa-solid fa-star';
     } else {
         btnFavorites.classList.remove('active');
-        icon.className = 'fa-regular fa-heart';
+        icon.className = 'fa-regular fa-star';
     }
 }
 
@@ -260,7 +260,7 @@ function renderList() {
                 </div>
             </div>
             <div class="ch-action">
-                <i class="${isFav ? 'fa-solid' : 'fa-regular'} fa-heart fav-icon" 
+                <i class="${isFav ? 'fa-solid' : 'fa-regular'} fa-star fav-icon" 
                    onclick="toggleFavorite('${ch.id}', event)" 
                    title="${isFav ? 'Remove from Favorites' : 'Add to Favorites'}"></i>
             </div>
