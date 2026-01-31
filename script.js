@@ -335,6 +335,15 @@ function loadstream(source) {
     }
 }
 
+// Utils
+function debounce(func, wait) {
+    let timeout;
+    return function (...args) {
+        clearTimeout(timeout);
+        timeout = setTimeout(() => func.apply(this, args), wait);
+    };
+}
+
 // Event Listeners
 btnPrev.onclick = () => {
     if (state.filteredChannels.length === 0) return;
@@ -356,7 +365,7 @@ btnFavorites.onclick = () => {
     filterChannels();
 };
 
-searchInput.addEventListener('input', filterChannels);
+searchInput.addEventListener('input', debounce(filterChannels, 300));
 categorySelect.addEventListener('change', () => {
     state.selectedCategory = categorySelect.value;
     filterChannels();
